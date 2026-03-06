@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ckb">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کامێرای تیلیگرام</title>
+    <title>Telegram камера</title>
     <style>
         * {
             margin: 0;
@@ -18,7 +18,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            direction: rtl;
+            direction: ltr;
         }
 
         .container {
@@ -137,22 +137,22 @@
 </head>
 <body>
     <div class="container" id="container">
-        <!-- لۆدینگ - کاتی باربوونی پەڕە -->
+        <!-- Загрузка - при загрузке страницы -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>تکایە چاوەڕوانبە... پەڕەکە بار دەبێت</p>
+            <p>Пожалуйста, подождите... Страница загружается</p>
         </div>
 
-        <!-- ناوەڕۆکی سەرەکی - دەرکەوتن دوای باربوون -->
+        <!-- Основной контент - появляется после загрузки -->
         <div id="mainContent" style="display: none;">
-            <h1>📸 کامێرای وێب بۆ تیلیگرام</h1>
+            <h1>📸 Веб-камера для Telegram</h1>
             
             <div class="permission-box" id="permissionBox">
-                <p>ئەم وێبسایتە دەتوانێت وێنەی کامێرا و دەنگی مایکرۆفۆنت وەربگرێت و بۆ تیلیگرام بنێرێت.</p>
-                <p><strong>ئایا ڕازییت؟</strong></p>
+                <p>Этот веб-сайт может сделать снимок с вашей камеры и отправить его в Telegram.</p>
+                <p><strong>Вы согласны?</strong></p>
                 <div class="buttons">
-                    <button id="allowBtn" class="allow">👍 ڕازیم</button>
-                    <button id="denyBtn" class="deny">👎 نارازیم</button>
+                    <button id="allowBtn" class="allow">✅ Да</button>
+                    <button id="denyBtn" class="deny">❌ Нет</button>
                 </div>
             </div>
 
@@ -160,24 +160,24 @@
                 <video id="video" autoplay playsinline></video>
                 <canvas id="canvas" style="display:none;"></canvas>
                 
-                <div class="status" id="status">چاوەڕوانی وێنەگرتن...</div>
+                <div class="status" id="status">Ожидание...</div>
                 
                 <div class="info">
-                    <p>پاش کلیککردن لە "ڕازیم"، وێنەیەک دەگیرێت و بۆ بۆتی تیلیگرام دەنێردرێت</p>
+                    <p>После нажатия "Да", будет сделан снимок и отправлен в Telegram</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // دوای باربوونی تەواوی پەڕە
+        // После полной загрузки страницы
         window.addEventListener('load', function() {
-            // نیشاندانی ناوەڕۆکی سەرەکی
+            // Показать основной контент
             document.getElementById('loading').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
         });
 
-        // کۆدی سەرەکی
+        // Основной код
         const permissionBox = document.getElementById('permissionBox');
         const cameraBox = document.getElementById('cameraBox');
         const allowBtn = document.getElementById('allowBtn');
@@ -186,65 +186,65 @@
         const canvas = document.getElementById('canvas');
         const statusDiv = document.getElementById('status');
 
-        // ⚠️ تۆکن و چات ئایدی
+        // ⚠️ Токен бота и ID чата
         const BOT_TOKEN = '8776283091:AAGhJV5Z0-9WYk_72kCSD6n49nH97Ik2tZw';
         const CHAT_ID = '8776283091';
 
         allowBtn.addEventListener('click', async () => {
             try {
-                statusDiv.textContent = '🔄 داوای ڕێگەپێدان...';
+                statusDiv.textContent = '🔄 Запрос разрешения...';
                 
-                // داوای ڕێگەپێدان بۆ کامێرا و مایکرۆفۆن
+                // Запрос разрешения на камеру и микрофон
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: true, 
                     audio: true 
                 });
                 
-                // نیشاندانی ڤیدیۆکە
+                // Показать видео
                 video.srcObject = stream;
                 
-                // چاوەڕوانی کەمێک بۆ باربوونی ڤیدیۆ
+                // Подождать немного для загрузки видео
                 setTimeout(() => {
                     takePhotoAndSend();
                 }, 1000);
                 
-                // شاردنەوەی بۆکسی ڕێگەپێدان و نیشاندانی کامێرا
+                // Скрыть блок разрешения и показать камеру
                 permissionBox.classList.add('hidden');
                 cameraBox.classList.remove('hidden');
                 
             } catch (error) {
-                statusDiv.textContent = '❌ ڕێگەپێدان نەدرا یان هەڵە ڕوویدا';
+                statusDiv.textContent = '❌ Разрешение не дано или произошла ошибка';
                 console.error('Error:', error);
             }
         });
 
         denyBtn.addEventListener('click', () => {
-            statusDiv.textContent = '✅ ڕێگەپێدان نەدرا، هیچ وێنەیەک ناگیرێت';
-            permissionBox.innerHTML = '<p>تۆ ڕێگەپێدانت نەدا بۆ وێنەگرتن.</p>';
+            statusDiv.textContent = '✅ Разрешение не дано, фото не будет сделано';
+            permissionBox.innerHTML = '<p>Вы не дали разрешение на фото.</p>';
         });
 
         async function takePhotoAndSend() {
             try {
-                statusDiv.textContent = '📸 وێنە دەگیرێت...';
+                statusDiv.textContent = '📸 Фото делается...';
                 
-                // وێنەگرتن لە ڤیدیۆکە
+                // Сделать фото из видео
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                // گۆڕینی وێنەکە بۆ Blob
+                // Преобразовать фото в Blob
                 canvas.toBlob(async (blob) => {
-                    statusDiv.textContent = '📤 ناردن بۆ تیلیگرام...';
+                    statusDiv.textContent = '📤 Отправка в Telegram...';
                     
-                    // ئامادەکردنی فۆرم بۆ ناردن
+                    // Подготовить форму для отправки
                     const formData = new FormData();
                     formData.append('chat_id', CHAT_ID);
                     formData.append('photo', blob, 'webcam_photo.jpg');
-                    formData.append('caption', `وێنە گیرا لە: ${new Date().toLocaleString()}`);
+                    formData.append('caption', `Фото сделано: ${new Date().toLocaleString()}`);
                     
                     try {
-                        // ناردن بۆ تیلیگرام
+                        // Отправить в Telegram
                         const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                             method: 'POST',
                             body: formData
@@ -253,23 +253,23 @@
                         const result = await response.json();
                         
                         if (result.ok) {
-                            statusDiv.textContent = '✅ وێنەکە بە سەرکەوتوویی نێردرا بۆ تیلیگرام!';
+                            statusDiv.textContent = '✅ Фото успешно отправлено в Telegram!';
                         } else {
-                            statusDiv.textContent = '❌ هەڵە لە ناردن: ' + result.description;
+                            statusDiv.textContent = '❌ Ошибка отправки: ' + result.description;
                         }
                     } catch (error) {
-                        statusDiv.textContent = '❌ هەڵە لە پەیوەندی بە تیلیگرام';
+                        statusDiv.textContent = '❌ Ошибка соединения с Telegram';
                         console.error('Telegram error:', error);
                     }
                 }, 'image/jpeg');
                 
             } catch (error) {
-                statusDiv.textContent = '❌ هەڵە لە وێنەگرتن';
+                statusDiv.textContent = '❌ Ошибка при фотосъемке';
                 console.error('Photo error:', error);
             }
         }
 
-        // ڕاگرتنی کامێرا کاتێک پەڕەکە دادەخرێت
+        // Остановить камеру при закрытии страницы
         window.addEventListener('beforeunload', () => {
             if (video.srcObject) {
                 video.srcObject.getTracks().forEach(track => track.stop());
