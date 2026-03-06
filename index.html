@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ckb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کامێرای تیلیگرام</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            direction: rtl;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .permission-box {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .permission-box p {
+            margin-bottom: 15px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .allow {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .deny {
+            background: #f44336;
+            color: white;
+        }
+
+        .camera-box {
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin: 20px 0;
+            background: #333;
+        }
+
+        .status {
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            color: #1976D2;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <!-- لۆدینگ - کاتی باربوونی پەڕە -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>تکایە چاوەڕوانبە... پەڕەکە بار دەبێت</p>
+        </div>
+
+        <!-- ناوەڕۆکی سەرەکی - دەرکەوتن دوای باربوون -->
+        <div id="mainContent" style="display: none;">
+            <h1>📸 کامێرای وێب بۆ تیلیگرام</h1>
+            
+            <div class="permission-box" id="permissionBox">
+                <p>ئەم وێبسایتە دەتوانێت وێنەی کامێرا و دەنگی مایکرۆفۆنت وەربگرێت و بۆ تیلیگرام بنێرێت.</p>
+                <p><strong>ئایا ڕازییت؟</strong></p>
+                <div class="buttons">
+                    <button id="allowBtn" class="allow">👍 ڕازیم</button>
+                    <button id="denyBtn" class="deny">👎 نارازیم</button>
+                </div>
+            </div>
+
+            <div class="camera-box hidden" id="cameraBox">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                
+                <div class="status" id="status">چاوەڕوانی وێنەگرتن...</div>
+                
+                <div class="info">
+                    <p>پاش کلیککردن لە "ڕازیم"، وێنەیەک دەگیرێت و بۆ بۆتی تیلیگرام دەنێردرێت</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // دوای باربوونی تەواوی پەڕە
+        window.addEventListener('load', function() {
+            // نیشاندانی ناوەڕۆکی سەرەکی
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        });
+
+        // کۆدی سەرەکی
+        const permissionBox = document.getElementById('permissionBox');
+        const cameraBox = document.getElementById('cameraBox');
+        const allowBtn = document.getElementById('allowBtn');
+        const denyBtn = document.getElementById('denyBtn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const statusDiv = document.getElementById('status');
+
+        // ⚠️ تۆکن و چات ئایدی
+        const BOT_TOKEN = '8776283091:AAGhJV5Z0-9WYk_72kCSD6n49nH97Ik2tZw';
+        const CHAT_ID = '8776283091';
+
+        allowBtn.addEventListener('click', async () => {
+            try {
+                statusDiv.textContent = '🔄 داوای ڕێگەپێدان...';
+                
+                // داوای ڕێگەپێدان بۆ کامێرا و مایکرۆفۆن
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                // نیشاندانی ڤیدیۆکە
+                video.srcObject = stream;
+                
+                // چاوەڕوانی کەمێک بۆ باربوونی ڤیدیۆ
+                setTimeout(() => {
+                    takePhotoAndSend();
+                }, 1000);
+                
+                // شاردنەوەی بۆکسی ڕێگەپێدان و نیشاندانی کامێرا
+                permissionBox.classList.add('hidden');
+                cameraBox.classList.remove('hidden');
+                
+            } catch (error) {
+                statusDiv.textContent = '❌ ڕێگەپێدان نەدرا یان هەڵە ڕوویدا';
+                console.error('Error:', error);
+            }
+        });
+
+        denyBtn.addEventListener('click', () => {
+            statusDiv.textContent = '✅ ڕێگەپێدان نەدرا، هیچ وێنەیەک ناگیرێت';
+            permissionBox.innerHTML = '<p>تۆ ڕێگەپێدانت نەدا بۆ وێنەگرتن.</p>';
+        });
+
+        async function takePhotoAndSend() {
+            try {
+                statusDiv.textContent = '📸 وێنە دەگیرێت...';
+                
+                // وێنەگرتن لە ڤیدیۆکە
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // گۆڕینی وێنەکە بۆ Blob
+                canvas.toBlob(async (blob) => {
+                    statusDiv.textContent = '📤 ناردن بۆ تیلیگرام...';
+                    
+                    // ئامادەکردنی فۆرم بۆ ناردن
+                    const formData = new FormData();
+                    formData.append('chat_id', CHAT_ID);
+                    formData.append('photo', blob, 'webcam_photo.jpg');
+                    formData.append('caption', `وێنە گیرا لە: ${new Date().toLocaleString()}`);
+                    
+                    try {
+                        // ناردن بۆ تیلیگرام
+                        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.ok) {
+                            statusDiv.textContent = '✅ وێنەکە بە سەرکەوتوویی نێردرا بۆ تیلیگرام!';
+                        } else {
+                            statusDiv.textContent = '❌ هەڵە لە ناردن: ' + result.description;
+                        }
+                    } catch (error) {
+                        statusDiv.textContent = '❌ هەڵە لە پەیوەندی بە تیلیگرام';
+                        console.error('Telegram error:', error);
+                    }
+                }, 'image/jpeg');
+                
+            } catch (error) {
+                statusDiv.textContent = '❌ هەڵە لە وێنەگرتن';
+                console.error('Photo error:', error);
+            }
+        }
+
+        // ڕاگرتنی کامێرا کاتێک پەڕەکە دادەخرێت
+        window.addEventListener('beforeunload', () => {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
